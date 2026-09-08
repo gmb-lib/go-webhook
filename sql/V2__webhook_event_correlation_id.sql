@@ -1,0 +1,11 @@
+-- V2: the event remembers the correlation id of the act that caused it.
+--
+-- A delivery carries the X-Correlation-ID header of the request that caused the event
+-- (a person's or another system's act), the same value on every attempt, so a receiver
+-- can quote one id and the host can find the whole thread across its services. For that
+-- the id has to survive with the event, not with the process: a worker that restarts
+-- between two attempts reads it back from here. NULL when no request caused the event
+-- (background work); the header is then not sent.
+--
+-- Nullable, no default — a metadata-only add, no table rewrite.
+ALTER TABLE webhook.event ADD COLUMN IF NOT EXISTS correlation_id text;

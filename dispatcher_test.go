@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/gmb-lib/go-platform-kit/propagation"
 )
 
 // fakeClock is a settable time source shared by the dispatcher and the worker.
@@ -118,7 +120,8 @@ func TestWorkerRetriesThenDeliversWithVerifiableSignature(t *testing.T) {
 		t.Fatal(err)
 	}
 	payload := []byte(`{"eventId":"e1","type":"signing-request.completed","sequence":3}`)
-	ds, err := disp.Publish(ctx, Event{ID: "e1", ClientID: "acme", Type: "signing-request.completed", Payload: payload})
+	const correlation = "01K5VB0E-the-causing-request"
+	ds, err := disp.Publish(ctx, Event{ID: "e1", ClientID: "acme", Type: "signing-request.completed", Payload: payload, CorrelationID: correlation})
 	if err != nil || len(ds) != 1 {
 		t.Fatalf("publish: %v %+v", err, ds)
 	}
@@ -192,6 +195,42 @@ func TestWorkerRetriesThenDeliversWithVerifiableSignature(t *testing.T) {
 	}
 	if err := Verify(sig, last.body, [][]byte{testSecret("stranger")}, sentAt, 5*time.Minute); err == nil {
 		t.Fatal("a stranger's secret must not verify")
+	}
+	// The correlation id of the act that caused the event travels on EVERY attempt, the
+	// same value each time — a retry is the same thread, not a new one.
+	for i, call := range rcv.calls {
+		if got := call.headers.Get(propagation.HeaderCorrelationID); got != correlation {
+			t.Fatalf("attempt %d: %s = %q, want %q", i+1, propagation.HeaderCorrelationID, got, correlation)
+		}
+	}
+}
+
+// An event that no request caused — background work — has no correlation id, and the
+// delivery then carries no header at all rather than an empty one.
+func TestWorkerSendsNoCorrelationHeaderWhenTheEventHasNone(t *testing.T) {
+	ctx := context.Background()
+	rcv := &receiver{}
+	srv := httptest.NewServer(rcv.handler(t))
+	defer srv.Close()
+	store := NewMemoryStore()
+	clock := &fakeClock{t: time.Unix(1757170123, 0)}
+	disp := &InProcess{Store: store, Clock: clock.Now}
+	_ = disp.Subscribe(ctx, Subscription{ID: "s", ClientID: "c", EndpointURL: srv.URL, Enabled: true, Secrets: []Secret{{Value: testSecret("k")}}})
+	ds, _ := disp.Publish(ctx, Event{ID: "e", ClientID: "c", Type: "t", Payload: []byte(`{}`)})
+	w := &Worker{Store: store, Clock: clock.Now, Jitter: NoJitter}
+	if n, err := w.RunOnce(ctx, 0); err != nil || n != 1 {
+		t.Fatalf("run: n=%d err=%v", n, err)
+	}
+	if d := mustDelivery(t, store, ds[0].ID); d.Status != StatusDelivered {
+		t.Fatalf("delivered expected: %+v", d)
+	}
+	rcv.mu.Lock()
+	defer rcv.mu.Unlock()
+	if len(rcv.calls) != 1 {
+		t.Fatalf("receiver saw %d calls", len(rcv.calls))
+	}
+	if vals := rcv.calls[0].headers.Values(propagation.HeaderCorrelationID); len(vals) != 0 {
+		t.Fatalf("no correlation id on the event, yet the header was sent: %q", vals)
 	}
 }
 

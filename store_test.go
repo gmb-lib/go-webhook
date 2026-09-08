@@ -75,10 +75,15 @@ func TestMemoryStoreSubscriptionsEventsAndNotFound(t *testing.T) {
 		t.Fatalf("acme's subscriptions, sorted: %+v", subs)
 	}
 
-	_ = m.SaveEvent(ctx, Event{ID: "e1", ClientID: "acme", Type: "x", Payload: []byte(`{"a":1}`)})
+	_ = m.SaveEvent(ctx, Event{ID: "e1", ClientID: "acme", Type: "x", Payload: []byte(`{"a":1}`), CorrelationID: "corr-1"})
 	ev, err := m.Event(ctx, "e1")
 	if err != nil || string(ev.Payload) != `{"a":1}` {
 		t.Fatalf("event round-trip: %v %s", err, ev.Payload)
+	}
+	// The correlation id is part of the stored event: a store that dropped it would send
+	// the first attempt with the header and a retry without.
+	if ev.CorrelationID != "corr-1" {
+		t.Fatalf("correlation id not stored with the event: %+v", ev)
 	}
 
 	_ = m.Enqueue(ctx, []Delivery{{ID: "d2", EventID: "e1"}, {ID: "d1", EventID: "e1"}, {ID: "d9", EventID: "e9"}})

@@ -1,9 +1,12 @@
 # Table shape for a relational Store
 
 `V1__webhook_tables.sql` is the reference DDL behind the library's `Store` interface: three tables
-(`subscription`, `event`, `delivery`) whose columns match the Go types one for one. It is not applied
-by the library — copy it into your own migration set, put it in your own schema, and implement `Store`
-over it in whatever way your service talks to its database.
+(`subscription`, `event`, `delivery`) whose columns match the Go types one for one.
+`V2__webhook_event_correlation_id.sql` adds the event's `correlation_id` (the causing request's id,
+sent as `X-Correlation-ID` on every attempt; nullable). Neither is applied by the library — copy them
+into your own migration set in order, put them in your own schema, and implement `Store` over them in
+whatever way your service talks to its database. A host that copied `V1` before `V2` existed adds `V2`
+as its own next migration.
 
 Two things the shape decides on purpose:
 

@@ -30,7 +30,7 @@ import (
 )
 
 // Version is the library version, sent as the User-Agent when a host does not set one.
-const Version = "0.1.0"
+const Version = "0.2.0"
 
 // Event is one thing that happened. ID must be stable across delivery attempts: a
 // receiver de-duplicates on it. Payload is the exact body sent — this package neither
@@ -44,6 +44,14 @@ type Event struct {
 	// another's events.
 	ClientID string
 	Payload  json.RawMessage
+	// CorrelationID is the correlation id of the act that caused the event — the request
+	// a person or another system made — when that act had one. It is stored with the
+	// event and sent as the X-Correlation-ID header (the platform kit's
+	// propagation.HeaderCorrelationID — the one home of that header's name) on every
+	// attempt of every delivery of the event, so a receiver can quote it and
+	// the host can find the whole thread across its services. Empty for an event that
+	// no request caused (background work): the header is then not sent.
+	CorrelationID string
 }
 
 // Subscription is one registered endpoint. EventTypes empty means every type.
@@ -106,8 +114,9 @@ type Headers struct {
 	Signature string
 	// Event carries the event type, so a receiver can route before parsing the body.
 	Event string
-	// Delivery carries the delivery attempt id — unique per attempt, while the event id
-	// inside the body is the same across attempts.
+	// Delivery carries the delivery id — one per event per endpoint, the same value on
+	// every attempt of that delivery. The event id inside the body is the same across
+	// endpoints too; a receiver may de-duplicate on either.
 	Delivery string
 }
 

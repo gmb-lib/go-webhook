@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/gmb-lib/go-platform-kit/propagation"
 )
 
 // Dispatcher is the seam a host publishes through. Publish records an event and
@@ -254,6 +256,10 @@ func (w *Worker) send(ctx context.Context, sub Subscription, ev Event, d Deliver
 	body := []byte(ev.Payload)
 	ctx, cancel := context.WithTimeout(ctx, w.timeout())
 	defer cancel()
+	// The causing act's correlation id rides on the context as well as on the header, so
+	// a host-supplied Client whose transport reads the platform's context sees the same
+	// thread (an empty id leaves the context as it is).
+	ctx = propagation.WithCorrelationID(ctx, ev.CorrelationID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, sub.EndpointURL, bytes.NewReader(body))
 	if err != nil {
 		return 0, "build request: " + err.Error()
@@ -264,6 +270,11 @@ func (w *Worker) send(ctx context.Context, sub Subscription, ev Event, d Deliver
 	req.Header.Set(h.Signature, SignatureHeader(now, body, secrets...))
 	req.Header.Set(h.Event, ev.Type)
 	req.Header.Set(h.Delivery, d.ID)
+	// Every attempt of a delivery carries the same correlation id: a retry continues the
+	// thread the causing act started. An event that no request caused carries none.
+	if ev.CorrelationID != "" {
+		req.Header.Set(propagation.HeaderCorrelationID, ev.CorrelationID)
+	}
 
 	resp, err := w.client().Do(req)
 	if err != nil {
