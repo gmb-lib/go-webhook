@@ -3,6 +3,27 @@
 Notable changes to this library, newest first, per release. Written for whoever hosts the library or
 receives its deliveries.
 
+## v0.2.0
+
+### Added — the causing act's correlation id travels with the delivery
+
+`Event.CorrelationID` is the correlation id of the request that caused the event, when the host knew
+one. It is stored with the event (`MemoryStore` keeps it; a relational `Store` gets the column from
+`sql/V2__webhook_event_correlation_id.sql`) and the worker sends it as the platform's `X-Correlation-ID`
+header on **every attempt** of every delivery of the event — a retry continues the same thread. An event
+with no correlation id (background work) is sent without the header, never with an empty one. The header
+name comes from `go-platform-kit`'s `propagation` package, which is now a dependency: the library carries
+the platform kit like the platform's other libraries rather than re-declaring a concern the kit owns.
+
+For receivers: a delivery may now carry `X-Correlation-ID`; quote it when asking the host about a
+delivery. Nothing else on the wire changes.
+
+### Fixed — the delivery header's documentation
+
+`Headers.Delivery` was documented as "unique per attempt". The worker has always sent the delivery's own
+id — one per event per endpoint, the same value on every attempt — and the README said so; the doc
+comment now says the same.
+
 ## v0.1.0
 
 Initial code.
