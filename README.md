@@ -9,6 +9,9 @@ and a bounded give-up so a dead endpoint never keeps a queue alive forever.
 go get github.com/gmb-lib/go-webhook
 ```
 
+See [`CHANGELOG.md`](./CHANGELOG.md) for what each release changed, and what it means for code that
+already uses this library, before you bump.
+
 The library fixes everything a **receiver** can observe and leaves to the **host** what only the host
 knows: the event body, where things are stored, when the worker runs. It builds on
 [go-platform-kit](https://github.com/gmb-lib/go-platform-kit) for the one cross-cutting concern it
