@@ -3,6 +3,34 @@
 Notable changes to this library, newest first, per release. Written for whoever hosts the library or
 receives its deliveries.
 
+## v0.2.2
+
+A security release with one thing to act on: **this library now needs Go 1.27.2**. No source changed
+here and nothing it does behaves differently: a delivery's shape, headers and retry behaviour are
+exactly what v0.2.1 shipped.
+
+### Changed
+
+- **The module declares `go 1.27.2`** (was `1.27.0`). Go 1.27.2 fixes standard-library
+  vulnerabilities that this library's code reaches under 1.27.0. `govulncheck` found eight it calls
+  before the move and none after it: GO-2026-6603, -6605, -6607, -6608, -6610, -6611, -6613 and
+  -6617, in `net/http`, `crypto/tls`, `net/textproto` and `mime/multipart`. Raise your own module's
+  `go` directive to `1.27.2`; from there the go command downloads and uses that toolchain by itself.
+
+- **`go-platform-kit` → v1.11.4** (was v1.11.3). This library uses only its correlation helpers:
+  the header's name and the context key. The kit release requires azugo v0.40.0, so a host that also builds on azugo moves to it;
+  the kit's v1.11.4 notes list what that changes for a service.
+
+### Notes
+
+- **CI's linter moved to golangci-lint v2.14.0** (was v2.13.1). The earlier release cannot read Go
+  1.27.2's compiled standard library and stops before linting anything. CI's pinned GitHub Actions
+  also moved to their current commits.
+
+- The gate is green on Go 1.27.2: `go mod verify`, `go mod tidy -diff`, build, vet, `gofmt`,
+  golangci-lint v2.14.0, `go test -race` with **0 races**, and the fuzz target for 30 seconds with no
+  failing input; `govulncheck` finds nothing.
+
 ## v0.2.1
 
 Dependency maintenance with one thing to act on: **this library now needs Go 1.27**. No source
