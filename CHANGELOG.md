@@ -3,6 +3,15 @@
 Notable changes to this library, newest first, per release. Written for whoever hosts the library or
 receives its deliveries.
 
+## v0.2.3
+
+This release requires **Go 1.27.3** (was 1.27.2). Raise your own module's `go` directive before upgrading.
+No library source or public API changed.
+
+### Changed
+
+- `go-platform-kit` → v1.11.5 (was v1.11.4), used for correlation helpers.
+
 ## v0.2.2
 
 A security release with one thing to act on: **this library now needs Go 1.27.2**. No source changed
