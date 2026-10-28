@@ -1,5 +1,5 @@
-github.com/gmb-lib/go-platform-kit v1.11.4 h1:SQiVq4OwAUE6D1+C977l/L2pqdZSnQACex+tE+pBUsg=
-github.com/gmb-lib/go-platform-kit v1.11.4/go.mod h1:sfFN9cfCbeKYyHtm5pKWw+h9sejtncfyhjzwtmnoziU=
+github.com/gmb-lib/go-platform-kit v1.11.5 h1:suBBQjUGf122LC5BWGjG8gGfvrHq2gVMESzuEe4ZD70=
+github.com/gmb-lib/go-platform-kit v1.11.5/go.mod h1:Gz/r7sVGdAQ96BUzcDPV7rI88OqYQpWkkRFrykARexk=
 github.com/go-quicktest/qt v1.102.0 h1:HSQxCeh5YZH3EL3W39ixjtyaEhcWSXQHtHnMBzSs474=
 github.com/go-quicktest/qt v1.102.0/go.mod h1:p4lGIVX+8Wa6ZPNDvqcxq36XpUDLh42FLetFU7odllI=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
