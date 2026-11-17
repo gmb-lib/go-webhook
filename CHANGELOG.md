@@ -3,6 +3,14 @@
 Notable changes to this library, newest first, per release. Written for whoever hosts the library or
 receives its deliveries.
 
+## v0.3.0
+
+**Requires Go 1.27.4** (was 1.27.3). No source change in this library: every exported symbol, signature and behaviour is as in v0.2.3.
+
+### Changed
+
+- `github.com/gmb-lib/go-platform-kit` → v1.13.0, which brings Azugo v0.50 to a service that takes this version (see go-platform-kit v1.13.0 for what Azugo v0.50 changes for a service).
+
 ## v0.2.3
 
 This release requires **Go 1.27.3** (was 1.27.2). Raise your own module's `go` directive before upgrading.
